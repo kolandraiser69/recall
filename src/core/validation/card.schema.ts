@@ -20,6 +20,8 @@ export const cardSchema = z.object({
   state: z.nativeEnum(CardState),
   due: z.number(),
   fsrs: fsrsDataSchema,
+  isSuspended: z.boolean().optional(),
+  isFlagged: z.boolean().optional(),
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),

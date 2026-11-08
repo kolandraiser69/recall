@@ -1,6 +1,7 @@
 import type { RecallDatabase } from '../database';
-import type { Deck, DeckSettings } from '../../core/models/deck';
+import type { Deck, DeckSettings, DeckCardCounts } from '../../core/models/deck';
 import { DEFAULT_DECK_SETTINGS } from '../../core/models/deck';
+import { CardState } from '../../core/models/card';
 import { deckSchema } from '../../core/validation/deck.schema';
 import { generateId } from '../../utils/id';
 
@@ -75,5 +76,63 @@ export class DeckRepository {
     } else {
       await this.update(id, { deletedAt: Date.now() });
     }
+  }
+
+  /**
+   * Calculates card counts (total active, new, and due) for a specific deck.
+   * Excludes soft-deleted and suspended cards from new and due counts.
+   */
+  async getCardCounts(deckId: string, now = Date.now()): Promise<DeckCardCounts> {
+    const cards = await this.db.cards
+      .where('deckId')
+      .equals(deckId)
+      .filter((card) => card.deletedAt === null)
+      .toArray();
+
+    let total = 0;
+    let newCount = 0;
+    let dueCount = 0;
+
+    for (const card of cards) {
+      total++;
+      if (!card.isSuspended) {
+        if (card.state === CardState.New) {
+          newCount++;
+        } else if (card.due <= now) {
+          dueCount++;
+        }
+      }
+    }
+
+    return { total, newCount, dueCount };
+  }
+
+  /**
+   * Efficiently aggregates card counts for all decks in a single scan.
+   */
+  async getAllCardCounts(now = Date.now()): Promise<Map<string, DeckCardCounts>> {
+    const cards = await this.db.cards
+      .filter((card) => card.deletedAt === null)
+      .toArray();
+
+    const countsMap = new Map<string, DeckCardCounts>();
+
+    for (const card of cards) {
+      let counts = countsMap.get(card.deckId);
+      if (!counts) {
+        counts = { total: 0, newCount: 0, dueCount: 0 };
+        countsMap.set(card.deckId, counts);
+      }
+      counts.total++;
+      if (!card.isSuspended) {
+        if (card.state === CardState.New) {
+          counts.newCount++;
+        } else if (card.due <= now) {
+          counts.dueCount++;
+        }
+      }
+    }
+
+    return countsMap;
   }
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Settings, Command } from 'lucide-react';
-import { useNavigation } from '../navigation/NavigationContext';
+import { useNavigation, type NavRoute } from '../navigation/NavigationContext';
 import { useKeyboardShortcuts } from '../keyboard/KeyboardShortcutsProvider';
 import { IconButton } from '../components/IconButton';
 
@@ -8,10 +8,11 @@ export const TopNav: React.FC = () => {
   const { currentRoute, navigateTo } = useNavigation();
   const { toggleHelp } = useKeyboardShortcuts();
 
-  const titleMap = {
+  const titleMap: Record<NavRoute, string> = {
     home: 'Home',
     study: 'Study',
     decks: 'Decks',
+    collection: 'Collection',
     statistics: 'Statistics',
     settings: 'Settings',
   };

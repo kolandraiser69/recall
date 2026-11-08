@@ -9,6 +9,7 @@ export interface BadgeProps {
   size?: BadgeSize;
   className?: string;
   icon?: React.ReactNode;
+  title?: string;
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
@@ -35,9 +36,11 @@ export const Badge: React.FC<BadgeProps> = ({
   size = 'sm',
   className = '',
   icon,
+  title,
 }) => {
   return (
     <span
+      title={title}
       className={`
         inline-flex items-center rounded-full select-none
         ${variantStyles[variant]}

@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BookOpen, Layers, Plus, Clock, Sparkles, CheckCircle2 } from 'lucide-react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../../db/database';
+import { deckService } from '../../../services/deckService';
+import { CardState } from '../../../core/models/card';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
@@ -9,33 +12,23 @@ import { useNavigation } from '../../navigation/NavigationContext';
 
 export const HomeView: React.FC = () => {
   const { navigateTo } = useNavigation();
-  const [deckCount, setDeckCount] = useState<number | null>(null);
-  const [dueCardCount, setDueCardCount] = useState<number | null>(null);
-  const [totalCardCount, setTotalCardCount] = useState<number | null>(null);
-  const [reviewCount, setReviewCount] = useState<number | null>(null);
 
-  useEffect(() => {
-    async function loadStats() {
-      try {
-        const now = Date.now();
-        const [decks, cards, dueCards, reviews] = await Promise.all([
-          db.decks.filter((d) => d.deletedAt === null).count(),
-          db.cards.filter((c) => c.deletedAt === null).count(),
-          db.cards.filter((c) => c.deletedAt === null && c.due <= now).count(),
-          db.reviews.filter((r) => r.deletedAt === null).count(),
-        ]);
-
-        setDeckCount(decks);
-        setTotalCardCount(cards);
-        setDueCardCount(dueCards);
-        setReviewCount(reviews);
-      } catch (err) {
-        console.warn('Error loading home statistics:', err);
-      }
-    }
-
-    loadStats();
+  const now = Date.now();
+  const deckHierarchy = useLiveQuery(() => deckService.getDeckHierarchy(), []);
+  const stats = useLiveQuery(async () => {
+    const [decks, cards, dueCards, reviews] = await Promise.all([
+      db.decks.filter((d) => d.deletedAt === null).count(),
+      db.cards.filter((c) => c.deletedAt === null).count(),
+      db.cards.filter((c) => c.deletedAt === null && !c.isSuspended && c.due <= now && c.state !== CardState.New).count(),
+      db.reviews.filter((r) => r.deletedAt === null).count(),
+    ]);
+    return { decks, cards, dueCards, reviews };
   }, []);
+
+  const deckCount = stats?.decks ?? null;
+  const totalCardCount = stats?.cards ?? null;
+  const dueCardCount = stats?.dueCards ?? null;
+  const reviewCount = stats?.reviews ?? null;
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -77,10 +70,24 @@ export const HomeView: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-2 max-w-lg">
             <div className="flex items-center gap-2">
-              <Badge variant={dueCardCount && dueCardCount > 0 ? 'accent' : 'neutral'}>
-                {dueCardCount && dueCardCount > 0 ? `${dueCardCount} Due for Review` : 'All Caught Up'}
+              <Badge
+                variant={
+                  totalCardCount === 0 || deckCount === 0
+                    ? 'neutral'
+                    : dueCardCount && dueCardCount > 0
+                    ? 'accent'
+                    : 'neutral'
+                }
+              >
+                {deckCount === 0
+                  ? 'Welcome to Recall'
+                  : totalCardCount === 0
+                  ? 'No Cards in Collection'
+                  : dueCardCount && dueCardCount > 0
+                  ? `${dueCardCount} Due for Review`
+                  : 'All Caught Up'}
               </Badge>
-              {totalCardCount !== null && (
+              {totalCardCount !== null && totalCardCount > 0 && (
                 <span className="text-xs text-[var(--text-tertiary)]">
                   {totalCardCount} total {totalCardCount === 1 ? 'card' : 'cards'}
                 </span>
@@ -88,35 +95,75 @@ export const HomeView: React.FC = () => {
             </div>
 
             <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-              {dueCardCount && dueCardCount > 0
+              {deckCount === 0
+                ? 'Get started by creating your first deck'
+                : totalCardCount === 0
+                ? 'Your decks are ready, but have no flashcards yet'
+                : dueCardCount && dueCardCount > 0
                 ? 'Ready for your daily recall session?'
                 : 'No cards currently due for review'}
             </h2>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-              {dueCardCount && dueCardCount > 0
+              {deckCount === 0
+                ? 'Organize your knowledge into hierarchical decks and start mastering concepts with modern spaced repetition.'
+                : totalCardCount === 0
+                ? 'Add notes and flashcards to your decks to begin learning with FSRS-scheduled reviews.'
+                : dueCardCount && dueCardCount > 0
                 ? 'Spaced repetition works best when practiced in short, consistent daily intervals.'
                 : 'All scheduled cards are up to date. You can create new cards, explore your decks, or take a well-deserved break.'}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
-            <Button
-              variant="primary"
-              size="lg"
-              disabled={isLoading || dueCardCount === 0}
-              onClick={() => navigateTo('study')}
-              leftIcon={<BookOpen className="w-4 h-4" />}
-            >
-              Start Session
-            </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => navigateTo('decks')}
-              leftIcon={<Layers className="w-4 h-4" />}
-            >
-              View Decks
-            </Button>
+            {deckCount === 0 ? (
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => navigateTo('decks')}
+                leftIcon={<Plus className="w-4 h-4" />}
+              >
+                Create First Deck
+              </Button>
+            ) : totalCardCount === 0 ? (
+              <>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => navigateTo('collection')}
+                  leftIcon={<Plus className="w-4 h-4" />}
+                >
+                  Add Flashcards
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  onClick={() => navigateTo('decks')}
+                  leftIcon={<Layers className="w-4 h-4" />}
+                >
+                  View Decks
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  disabled={isLoading || dueCardCount === 0}
+                  onClick={() => navigateTo('study')}
+                  leftIcon={<BookOpen className="w-4 h-4" />}
+                >
+                  Start Session
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  onClick={() => navigateTo('decks')}
+                  leftIcon={<Layers className="w-4 h-4" />}
+                >
+                  View Decks
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </Card>
@@ -157,13 +204,61 @@ export const HomeView: React.FC = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            <Card variant="interactive" padding="md" onClick={() => navigateTo('decks')}>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[var(--text-primary)]">Decks Active</span>
-                <Badge variant="neutral">{deckCount}</Badge>
-              </div>
-              <p className="text-xs text-[var(--text-tertiary)] mt-2">Browse your deck hierarchies</p>
-            </Card>
+            {deckHierarchy && deckHierarchy.length > 0 ? (
+              deckHierarchy.slice(0, 6).map((deck) => (
+                <Card
+                  key={deck.id}
+                  variant="interactive"
+                  padding="md"
+                  onClick={() => navigateTo('decks')}
+                  className="flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold text-[var(--text-primary)] truncate">
+                        {deck.name}
+                      </span>
+                      {deck.children.length > 0 && (
+                        <span className="text-[10px] text-[var(--text-tertiary)] bg-[var(--bg-subtle)] px-1.5 py-0.5 rounded-[var(--radius-sm)] shrink-0">
+                          {deck.children.length} subdeck{deck.children.length > 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </div>
+                    {deck.description && (
+                      <p className="text-xs text-[var(--text-tertiary)] line-clamp-1 mt-1">
+                        {deck.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-4 pt-2 border-t border-[var(--border-subtle)] text-xs">
+                    {deck.totalCounts.dueCount > 0 ? (
+                      <Badge variant="neutral" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+                        {deck.totalCounts.dueCount} Due
+                      </Badge>
+                    ) : (
+                      <span className="text-[11px] text-[var(--text-tertiary)]">0 Due</span>
+                    )}
+                    {deck.totalCounts.newCount > 0 && (
+                      <Badge variant="accent">
+                        {deck.totalCounts.newCount} New
+                      </Badge>
+                    )}
+                    <span className="text-[11px] text-[var(--text-tertiary)] ml-auto font-mono">
+                      {deck.totalCounts.total} {deck.totalCounts.total === 1 ? 'card' : 'cards'}
+                    </span>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <Card variant="interactive" padding="md" onClick={() => navigateTo('decks')}>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[var(--text-primary)]">Decks Active</span>
+                  <Badge variant="neutral">{deckCount}</Badge>
+                </div>
+                <p className="text-xs text-[var(--text-tertiary)] mt-2">Browse your deck hierarchies</p>
+              </Card>
+            )}
           </div>
         )}
       </SectionContainer>

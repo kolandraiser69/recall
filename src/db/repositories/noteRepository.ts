@@ -70,4 +70,51 @@ export class NoteRepository {
       await this.update(id, { deletedAt: Date.now() });
     }
   }
+
+  /**
+   * Searches active notes across fieldValues, tags, and noteTypeId.
+   */
+  async search(params: {
+    query?: string;
+    noteTypeId?: string;
+    tag?: string;
+  }): Promise<Note[]> {
+    const query = params.query ? params.query.trim().toLowerCase() : '';
+    const noteTypeId = params.noteTypeId;
+    const tag = params.tag ? params.tag.trim().toLowerCase() : '';
+
+    return this.db.notes
+      .filter((note) => {
+        if (note.deletedAt !== null) return false;
+        if (noteTypeId && note.noteTypeId !== noteTypeId) return false;
+        if (tag && !note.tags.some((t) => t.toLowerCase() === tag)) return false;
+
+        if (query) {
+          const matchesField = Object.values(note.fieldValues).some((val) =>
+            val.toLowerCase().includes(query)
+          );
+          const matchesTag = note.tags.some((t) => t.toLowerCase().includes(query));
+          return matchesField || matchesTag;
+        }
+
+        return true;
+      })
+      .toArray();
+  }
+
+  /**
+   * Retrieves all unique tags currently in use across active notes.
+   */
+  async getAllTags(): Promise<string[]> {
+    const notes = await this.getAll(false);
+    const tagsSet = new Set<string>();
+    for (const note of notes) {
+      for (const tag of note.tags) {
+        if (tag.trim()) {
+          tagsSet.add(tag.trim());
+        }
+      }
+    }
+    return Array.from(tagsSet).sort((a, b) => a.localeCompare(b));
+  }
 }

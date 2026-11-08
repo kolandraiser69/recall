@@ -26,3 +26,22 @@ export interface Deck {
   updatedAt: number;
   deletedAt: number | null;
 }
+
+export interface DeckCardCounts {
+  total: number;
+  newCount: number;
+  dueCount: number;
+}
+
+export interface DeckWithStats extends Deck {
+  directCounts: DeckCardCounts;
+  totalCounts: DeckCardCounts;
+  children: DeckWithStats[];
+  level: number;
+}
+
+export interface DeckDeleteOptions {
+  cardAction: 'move' | 'delete';
+  targetDeckId?: string;
+  subdeckAction: 'reparent' | 'delete';
+}

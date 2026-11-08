@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, BookOpen, Layers, BarChart3, Settings, Sun, Moon, Laptop } from 'lucide-react';
+import { Home, BookOpen, Layers, Library, BarChart3, Settings, Sun, Moon, Laptop } from 'lucide-react';
 import { useNavigation, type NavRoute } from '../navigation/NavigationContext';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -11,6 +11,7 @@ export const DesktopSidebar: React.FC = () => {
     { route: 'home', label: 'Home', icon: <Home className="w-4 h-4" />, shortcut: 'G H' },
     { route: 'study', label: 'Study', icon: <BookOpen className="w-4 h-4" />, shortcut: 'G S' },
     { route: 'decks', label: 'Decks', icon: <Layers className="w-4 h-4" />, shortcut: 'G D' },
+    { route: 'collection', label: 'Collection', icon: <Library className="w-4 h-4" />, shortcut: 'G C' },
     { route: 'statistics', label: 'Statistics', icon: <BarChart3 className="w-4 h-4" />, shortcut: 'G T' },
   ];
 

@@ -11,6 +11,7 @@ export const GLOBAL_SHORTCUTS: ShortcutDefinition[] = [
   { keys: ['g', 'h'], description: 'Go to Home', category: 'Navigation' },
   { keys: ['g', 's'], description: 'Go to Study', category: 'Navigation' },
   { keys: ['g', 'd'], description: 'Go to Decks', category: 'Navigation' },
+  { keys: ['g', 'c'], description: 'Go to Collection', category: 'Navigation' },
   { keys: ['g', 't'], description: 'Go to Statistics', category: 'Navigation' },
   { keys: ['g', ','], description: 'Go to Settings', category: 'Navigation' },
   { keys: ['?'], description: 'Show Keyboard Shortcuts', category: 'General' },
@@ -87,6 +88,7 @@ export const KeyboardShortcutsProvider: React.FC<{ children: React.ReactNode }> 
         if (key.toLowerCase() === 'h') route = 'home';
         else if (key.toLowerCase() === 's') route = 'study';
         else if (key.toLowerCase() === 'd') route = 'decks';
+        else if (key.toLowerCase() === 'c' || key.toLowerCase() === 'b') route = 'collection';
         else if (key.toLowerCase() === 't') route = 'statistics';
         else if (key === ',') route = 'settings';
 

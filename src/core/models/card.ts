@@ -28,10 +28,12 @@ export interface Card {
   id: string;               // UUID v4
   noteId: string;           // Reference to parent Note
   deckId: string;           // Direct deck containment
-  templateIndex: number;    // Index of the template from NoteType
+  templateIndex: number;    // Index of the template from NoteType (or cloze index: 0, 1, 2...)
   state: CardState;         // Current learning state
   due: number;              // Due timestamp in ms
   fsrs: FSRSData;           // Embedded FSRS parameters
+  isSuspended?: boolean;    // Optional flag: card suspended from study session
+  isFlagged?: boolean;      // Optional flag: card marked with color flag
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null; // Tombstone for sync

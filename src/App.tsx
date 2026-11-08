@@ -8,7 +8,8 @@ import { AppLayout } from './ui/layouts/AppLayout';
 
 import { HomeView } from './ui/views/Home/HomeView';
 import { StudyPlaceholderView } from './ui/views/Study/StudyPlaceholderView';
-import { DecksPlaceholderView } from './ui/views/Decks/DecksPlaceholderView';
+import { DecksView } from './ui/views/Decks/DecksView';
+import { CollectionView } from './ui/views/Collection/CollectionView';
 import { StatisticsPlaceholderView } from './ui/views/Statistics/StatisticsPlaceholderView';
 import { SettingsView } from './ui/views/Settings/SettingsView';
 
@@ -19,7 +20,9 @@ const RouteRenderer: React.FC = () => {
     case 'study':
       return <StudyPlaceholderView />;
     case 'decks':
-      return <DecksPlaceholderView />;
+      return <DecksView />;
+    case 'collection':
+      return <CollectionView />;
     case 'statistics':
       return <StatisticsPlaceholderView />;
     case 'settings':

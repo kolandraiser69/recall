@@ -128,4 +128,22 @@ export class CardRepository {
       await this.db.cards.bulkPut(softDeleted);
     }
   }
+
+  async setSuspended(id: string, isSuspended: boolean): Promise<Card> {
+    await this.update(id, { isSuspended });
+    const updated = await this.getById(id);
+    return updated!;
+  }
+
+  async setFlagged(id: string, isFlagged: boolean): Promise<Card> {
+    await this.update(id, { isFlagged });
+    const updated = await this.getById(id);
+    return updated!;
+  }
+
+  async moveToDeck(id: string, deckId: string): Promise<Card> {
+    await this.update(id, { deckId });
+    const updated = await this.getById(id);
+    return updated!;
+  }
 }

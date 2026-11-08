@@ -1,10 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-export type NavRoute = 'home' | 'study' | 'decks' | 'statistics' | 'settings';
+export type NavRoute = 'home' | 'study' | 'decks' | 'collection' | 'statistics' | 'settings';
+
+export interface NavigationParams {
+  deckId?: string;
+  [key: string]: string | undefined;
+}
 
 interface NavigationContextValue {
   currentRoute: NavRoute;
-  navigateTo: (route: NavRoute) => void;
+  routeParams: NavigationParams;
+  navigateTo: (route: NavRoute, params?: NavigationParams) => void;
   basePath: string;
 }
 
@@ -39,6 +45,10 @@ function parseRouteFromLocation(basePath: string): NavRoute {
       return 'study';
     case 'decks':
       return 'decks';
+    case 'collection':
+    case 'cards':
+    case 'browser':
+      return 'collection';
     case 'statistics':
     case 'stats':
       return 'statistics';
@@ -54,29 +64,30 @@ function parseRouteFromLocation(basePath: string): NavRoute {
 export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const basePath = getNormalizedBasePath();
   const [currentRoute, setCurrentRoute] = useState<NavRoute>(() => parseRouteFromLocation(basePath));
+  const [routeParams, setRouteParams] = useState<NavigationParams>({});
 
   useEffect(() => {
     const handlePopState = () => {
       setCurrentRoute(parseRouteFromLocation(basePath));
+      setRouteParams({});
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [basePath]);
 
-  const navigateTo = (route: NavRoute) => {
-    if (route === currentRoute) return;
-
+  const navigateTo = (route: NavRoute, params: NavigationParams = {}) => {
     setCurrentRoute(route);
+    setRouteParams(params);
 
     if (typeof window !== 'undefined') {
       const targetPath = route === 'home' ? basePath : `${basePath}${route}`;
-      window.history.pushState({ route }, '', targetPath);
+      window.history.pushState({ route, params }, '', targetPath);
     }
   };
 
   return (
-    <NavigationContext.Provider value={{ currentRoute, navigateTo, basePath }}>
+    <NavigationContext.Provider value={{ currentRoute, routeParams, navigateTo, basePath }}>
       {children}
     </NavigationContext.Provider>
   );
