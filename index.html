@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Recall</title>
+    <script>
+      // Restore deep link redirected from 404.html on GitHub Pages
+      (function() {
+        var redirect = sessionStorage.getItem('recall_redirect_path');
+        if (redirect) {
+          sessionStorage.removeItem('recall_redirect_path');
+          if (redirect !== window.location.pathname) {
+            window.history.replaceState(null, null, redirect);
+          }
+        }
+      })();
+    </script>
+  </head>
+  <body class="bg-neutral-50 text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-50 min-h-dvh">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

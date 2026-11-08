@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Color Palette - Light Mode (Apple Clean Neutral) */
+    --bg-app: #fbfbfd;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #ffffff;
+    --bg-subtle: #f5f5f7;
+    --bg-muted: #e5e5ea;
+
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-strong: rgba(0, 0, 0, 0.16);
+    --divider: rgba(0, 0, 0, 0.06);
+
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-tertiary: #86868b;
+    --text-quaternary: #aeaeb2;
+
+    /* Primary Accent - Apple System Blue */
+    --accent: #007aff;
+    --accent-hover: #0066d6;
+    --accent-active: #0051b3;
+    --accent-subtle: rgba(0, 122, 255, 0.08);
+    --accent-contrast: #ffffff;
+
+    /* Semantic Feedback */
+    --success: #34c759;
+    --success-subtle: rgba(52, 199, 89, 0.10);
+    --warning: #ff9500;
+    --warning-subtle: rgba(255, 149, 0, 0.10);
+    --danger: #ff3b30;
+    --danger-hover: #d70015;
+    --danger-subtle: rgba(255, 59, 48, 0.10);
+
+    /* Spaced Repetition Rating Colors */
+    --rating-again: #ff3b30;
+    --rating-hard: #ff9500;
+    --rating-good: #34c759;
+    --rating-easy: #5856d6;
+
+    /* Shadows */
+    --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    --shadow-overlay: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+
+    /* Radii */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 22px;
+  }
+
+  .dark {
+    /* Color Palette - Dark Mode (Apple Deep OLED Black) */
+    --bg-app: #000000;
+    --bg-surface: #121214;
+    --bg-surface-elevated: #1a1a1e;
+    --bg-subtle: #1c1c1e;
+    --bg-muted: #2c2c2e;
+
+    --border-subtle: rgba(255, 255, 255, 0.09);
+    --border-strong: rgba(255, 255, 255, 0.18);
+    --divider: rgba(255, 255, 255, 0.06);
+
+    --text-primary: #f5f5f7;
+    --text-secondary: #98989d;
+    --text-tertiary: #636366;
+    --text-quaternary: #48484a;
+
+    /* Primary Accent - Apple Vibrancy Blue */
+    --accent: #2997ff;
+    --accent-hover: #47a6ff;
+    --accent-active: #70baff;
+    --accent-subtle: rgba(41, 151, 255, 0.15);
+    --accent-contrast: #ffffff;
+
+    /* Semantic Feedback */
+    --success: #30d158;
+    --success-subtle: rgba(48, 209, 88, 0.15);
+    --warning: #ffd60a;
+    --warning-subtle: rgba(255, 214, 10, 0.15);
+    --danger: #ff453a;
+    --danger-hover: #ff6961;
+    --danger-subtle: rgba(255, 69, 58, 0.15);
+
+    /* Shadows */
+    --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
+    --shadow-overlay: 0 16px 32px 0 rgba(0, 0, 0, 0.65);
+  }
+
+  /* Base Reset & Native App Typography */
+  html {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+      system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+  }
+
+  body {
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* Responsive Safe Area Utilities for iOS Standalone PWA */
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  /* Accessibility: Respect Reduced Motion Preference */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Subtle Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
+  }
+}

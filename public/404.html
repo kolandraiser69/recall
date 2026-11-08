@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Recall</title>
+    <script>
+      // Single Page Application deep link fallback for GitHub Pages
+      sessionStorage.setItem(
+        'recall_redirect_path',
+        window.location.pathname + window.location.search + window.location.hash
+      );
+      // Determine base path: if served from /recall/, redirect to /recall/, else /
+      var basePath = window.location.pathname.startsWith('/recall/') ? '/recall/' : '/';
+      window.location.replace(basePath);
+    </script>
+  </head>
+  <body></body>
+</html>
