@@ -7,7 +7,7 @@ import { ToastProvider } from './ui/components/Toast';
 import { AppLayout } from './ui/layouts/AppLayout';
 
 import { HomeView } from './ui/views/Home/HomeView';
-import { StudyPlaceholderView } from './ui/views/Study/StudyPlaceholderView';
+import { StudyView } from './ui/views/Study/StudyView';
 import { DecksView } from './ui/views/Decks/DecksView';
 import { CollectionView } from './ui/views/Collection/CollectionView';
 import { StatisticsPlaceholderView } from './ui/views/Statistics/StatisticsPlaceholderView';
@@ -18,7 +18,7 @@ const RouteRenderer: React.FC = () => {
 
   switch (currentRoute) {
     case 'study':
-      return <StudyPlaceholderView />;
+      return <StudyView />;
     case 'decks':
       return <DecksView />;
     case 'collection':

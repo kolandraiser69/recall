@@ -225,7 +225,7 @@ export const DecksView: React.FC = () => {
             node={node}
             isExpanded={isExpanded}
             onToggleExpand={handleToggleExpand}
-            onStudy={() => navigateTo('study')}
+            onStudy={(dId) => navigateTo('study', { deckId: dId })}
             onAddNote={(dId) => handleOpenAddNote(dId)}
             onBrowseCards={(dId) => navigateTo('collection', { deckId: dId })}
             onAddSubdeck={(pId) => handleOpenCreate(pId)}

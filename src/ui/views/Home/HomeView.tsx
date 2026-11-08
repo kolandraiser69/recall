@@ -16,18 +16,20 @@ export const HomeView: React.FC = () => {
   const now = Date.now();
   const deckHierarchy = useLiveQuery(() => deckService.getDeckHierarchy(), []);
   const stats = useLiveQuery(async () => {
-    const [decks, cards, dueCards, reviews] = await Promise.all([
+    const [decks, cards, dueCards, newCards, reviews] = await Promise.all([
       db.decks.filter((d) => d.deletedAt === null).count(),
       db.cards.filter((c) => c.deletedAt === null).count(),
       db.cards.filter((c) => c.deletedAt === null && !c.isSuspended && c.due <= now && c.state !== CardState.New).count(),
+      db.cards.filter((c) => c.deletedAt === null && !c.isSuspended && c.state === CardState.New).count(),
       db.reviews.filter((r) => r.deletedAt === null).count(),
     ]);
-    return { decks, cards, dueCards, reviews };
+    return { decks, cards, dueCards, newCards, reviews };
   }, []);
 
   const deckCount = stats?.decks ?? null;
   const totalCardCount = stats?.cards ?? null;
   const dueCardCount = stats?.dueCards ?? null;
+  const newCardCount = stats?.newCards ?? null;
   const reviewCount = stats?.reviews ?? null;
 
   const getGreeting = () => {
@@ -74,7 +76,7 @@ export const HomeView: React.FC = () => {
                 variant={
                   totalCardCount === 0 || deckCount === 0
                     ? 'neutral'
-                    : dueCardCount && dueCardCount > 0
+                    : (dueCardCount && dueCardCount > 0) || (newCardCount && newCardCount > 0)
                     ? 'accent'
                     : 'neutral'
                 }
@@ -84,7 +86,9 @@ export const HomeView: React.FC = () => {
                   : totalCardCount === 0
                   ? 'No Cards in Collection'
                   : dueCardCount && dueCardCount > 0
-                  ? `${dueCardCount} Due for Review`
+                  ? `${dueCardCount} Due for Review${newCardCount && newCardCount > 0 ? ` + ${newCardCount} New` : ''}`
+                  : newCardCount && newCardCount > 0
+                  ? `${newCardCount} New Cards Ready`
                   : 'All Caught Up'}
               </Badge>
               {totalCardCount !== null && totalCardCount > 0 && (
@@ -101,6 +105,8 @@ export const HomeView: React.FC = () => {
                 ? 'Your decks are ready, but have no flashcards yet'
                 : dueCardCount && dueCardCount > 0
                 ? 'Ready for your daily recall session?'
+                : newCardCount && newCardCount > 0
+                ? 'New flashcards are waiting to be learned'
                 : 'No cards currently due for review'}
             </h2>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
@@ -110,6 +116,8 @@ export const HomeView: React.FC = () => {
                 ? 'Add notes and flashcards to your decks to begin learning with FSRS-scheduled reviews.'
                 : dueCardCount && dueCardCount > 0
                 ? 'Spaced repetition works best when practiced in short, consistent daily intervals.'
+                : newCardCount && newCardCount > 0
+                ? 'Start learning your new flashcards today to build initial memory stability.'
                 : 'All scheduled cards are up to date. You can create new cards, explore your decks, or take a well-deserved break.'}
             </p>
           </div>
@@ -148,7 +156,7 @@ export const HomeView: React.FC = () => {
                 <Button
                   variant="primary"
                   size="lg"
-                  disabled={isLoading || dueCardCount === 0}
+                  disabled={isLoading || (!dueCardCount && !newCardCount)}
                   onClick={() => navigateTo('study')}
                   leftIcon={<BookOpen className="w-4 h-4" />}
                 >
