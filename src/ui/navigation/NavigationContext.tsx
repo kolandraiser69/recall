@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-export type NavRoute = 'home' | 'study' | 'decks' | 'collection' | 'statistics' | 'settings';
+export type NavRoute =
+  | 'home'
+  | 'study'
+  | 'decks'
+  | 'collection'
+  | 'statistics'
+  | 'settings'
+  | 'calendar'
+  | 'quicklinks';
 
 export interface NavigationParams {
   deckId?: string;
@@ -52,6 +60,12 @@ function parseRouteFromLocation(basePath: string): NavRoute {
     case 'statistics':
     case 'stats':
       return 'statistics';
+    case 'calendar':
+    case 'kalender':
+      return 'calendar';
+    case 'quicklinks':
+    case 'links':
+      return 'quicklinks';
     case 'settings':
       return 'settings';
     case '':

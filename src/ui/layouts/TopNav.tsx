@@ -14,6 +14,8 @@ export const TopNav: React.FC = () => {
     decks: 'Decks',
     collection: 'Collection',
     statistics: 'Statistics',
+    calendar: 'Kalender',
+    quicklinks: 'Uni-Quicklinks',
     settings: 'Settings',
   };
 

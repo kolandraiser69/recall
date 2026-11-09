@@ -1,18 +1,29 @@
-import React from 'react';
-import { Home, BookOpen, Layers, Library, BarChart3, Settings, Sun, Moon, Laptop } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Home, BookOpen, Layers, Library, BarChart3, Settings, Sun, Moon, Laptop, Calendar, ExternalLink, WifiOff } from 'lucide-react';
 import { useNavigation, type NavRoute } from '../navigation/NavigationContext';
 import { useTheme } from '../theme/ThemeProvider';
+import { pwaService } from '../../pwa/pwaService';
 
 export const DesktopSidebar: React.FC = () => {
   const { currentRoute, navigateTo } = useNavigation();
   const { theme, setTheme } = useTheme();
+  const [isOnline, setIsOnline] = useState<boolean>(pwaService.isOnline);
 
-  const navItems: { route: NavRoute; label: string; icon: React.ReactNode; shortcut: string }[] = [
+  useEffect(() => {
+    return pwaService.subscribeNetwork(setIsOnline);
+  }, []);
+
+  const primaryNavItems: { route: NavRoute; label: string; icon: React.ReactNode; shortcut: string }[] = [
     { route: 'home', label: 'Home', icon: <Home className="w-4 h-4" />, shortcut: 'G H' },
     { route: 'study', label: 'Study', icon: <BookOpen className="w-4 h-4" />, shortcut: 'G S' },
     { route: 'decks', label: 'Decks', icon: <Layers className="w-4 h-4" />, shortcut: 'G D' },
     { route: 'collection', label: 'Collection', icon: <Library className="w-4 h-4" />, shortcut: 'G C' },
     { route: 'statistics', label: 'Statistics', icon: <BarChart3 className="w-4 h-4" />, shortcut: 'G T' },
+  ];
+
+  const productivityNavItems: { route: NavRoute; label: string; icon: React.ReactNode; shortcut: string }[] = [
+    { route: 'calendar', label: 'Kalender', icon: <Calendar className="w-4 h-4" />, shortcut: 'G L' },
+    { route: 'quicklinks', label: 'Uni-Quicklinks', icon: <ExternalLink className="w-4 h-4" />, shortcut: 'G Q' },
   ];
 
   const cycleTheme = () => {
@@ -43,48 +54,101 @@ export const DesktopSidebar: React.FC = () => {
           </div>
         </div>
 
-        {/* Local First Status Pill */}
-        <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[var(--success-subtle)] text-[var(--success)] text-[10px] font-medium" title="Offline-Ready Local Database">
-          <span className="w-1.5 h-1.5 rounded-full bg-current" />
-          <span>Local</span>
+        {/* Network & Local-First Status Pill */}
+        <div
+          className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+            isOnline
+              ? 'bg-[var(--success-subtle)] text-[var(--success)]'
+              : 'bg-[var(--warning-subtle)] text-[var(--warning)]'
+          }`}
+          title={isOnline ? 'Online • Local-First DB' : 'Offline • Local Data Active'}
+        >
+          {isOnline ? (
+            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+          ) : (
+            <WifiOff className="w-3 h-3 text-current" />
+          )}
+          <span>{isOnline ? 'Local' : 'Offline'}</span>
         </div>
       </div>
 
-      {/* Primary Navigation Links */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <div className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-          Navigation
+      {/* Navigation Links */}
+      <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto">
+        <div>
+          <div className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+            Lernbereich
+          </div>
+          <div className="space-y-1">
+            {primaryNavItems.map((item) => {
+              const isActive = currentRoute === item.route;
+              return (
+                <button
+                  key={item.route}
+                  type="button"
+                  onClick={() => navigateTo(item.route)}
+                  className={`
+                    w-full flex items-center justify-between px-2.5 py-2 rounded-[var(--radius-md)] text-xs font-medium
+                    transition-all duration-150 outline-none cursor-pointer group
+                    focus-visible:ring-2 focus-visible:ring-[var(--accent)]
+                    ${
+                      isActive
+                        ? 'bg-[var(--accent-subtle)] text-[var(--accent)] font-semibold'
+                        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]'
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className={isActive ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)]'}>
+                      {item.icon}
+                    </span>
+                    <span>{item.label}</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-[var(--text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity">
+                    {item.shortcut}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-        {navItems.map((item) => {
-          const isActive = currentRoute === item.route;
-          return (
-            <button
-              key={item.route}
-              type="button"
-              onClick={() => navigateTo(item.route)}
-              className={`
-                w-full flex items-center justify-between px-2.5 py-2 rounded-[var(--radius-md)] text-xs font-medium
-                transition-all duration-150 outline-none cursor-pointer group
-                focus-visible:ring-2 focus-visible:ring-[var(--accent)]
-                ${
-                  isActive
-                    ? 'bg-[var(--accent-subtle)] text-[var(--accent)] font-semibold'
-                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]'
-                }
-              `}
-            >
-              <div className="flex items-center gap-2.5">
-                <span className={isActive ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)]'}>
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-              </div>
-              <span className="text-[10px] font-mono text-[var(--text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity">
-                {item.shortcut}
-              </span>
-            </button>
-          );
-        })}
+
+        <div>
+          <div className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+            Produktivität
+          </div>
+          <div className="space-y-1">
+            {productivityNavItems.map((item) => {
+              const isActive = currentRoute === item.route;
+              return (
+                <button
+                  key={item.route}
+                  type="button"
+                  onClick={() => navigateTo(item.route)}
+                  className={`
+                    w-full flex items-center justify-between px-2.5 py-2 rounded-[var(--radius-md)] text-xs font-medium
+                    transition-all duration-150 outline-none cursor-pointer group
+                    focus-visible:ring-2 focus-visible:ring-[var(--accent)]
+                    ${
+                      isActive
+                        ? 'bg-[var(--accent-subtle)] text-[var(--accent)] font-semibold'
+                        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]'
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className={isActive ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)]'}>
+                      {item.icon}
+                    </span>
+                    <span>{item.label}</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-[var(--text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity">
+                    {item.shortcut}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </nav>
 
       {/* Bottom Section: Settings & Theme */}

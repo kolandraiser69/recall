@@ -12,6 +12,9 @@ import { DecksView } from './ui/views/Decks/DecksView';
 import { CollectionView } from './ui/views/Collection/CollectionView';
 import { StatisticsView } from './ui/views/Statistics/StatisticsView';
 import { SettingsView } from './ui/views/Settings/SettingsView';
+import { CalendarView } from './ui/views/Calendar/CalendarView';
+import { QuicklinksView } from './ui/views/Quicklinks/QuicklinksView';
+import { PWAUpdateNotification } from './ui/components/PWAUpdateNotification';
 
 const RouteRenderer: React.FC = () => {
   const { currentRoute } = useNavigation();
@@ -25,6 +28,10 @@ const RouteRenderer: React.FC = () => {
       return <CollectionView />;
     case 'statistics':
       return <StatisticsView />;
+    case 'calendar':
+      return <CalendarView />;
+    case 'quicklinks':
+      return <QuicklinksView />;
     case 'settings':
       return <SettingsView />;
     case 'home':
@@ -64,6 +71,7 @@ export const App: React.FC = () => {
             <AppLayout>
               <RouteRenderer />
             </AppLayout>
+            <PWAUpdateNotification />
           </ToastProvider>
         </KeyboardShortcutsProvider>
       </NavigationProvider>

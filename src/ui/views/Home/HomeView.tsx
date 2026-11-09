@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Layers, Plus, Clock, Sparkles, CheckCircle2, Flame, BarChart2, ArrowRight } from 'lucide-react';
+import { BookOpen, Layers, Plus, Clock, Sparkles, CheckCircle2, Flame, BarChart2, ArrowRight, Calendar, ExternalLink } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../../db/database';
 import { deckService } from '../../../services/deckService';
@@ -372,6 +372,47 @@ export const HomeView: React.FC = () => {
             )}
           </div>
         )}
+      </SectionContainer>
+
+      {/* Section: Productivity & Campus Tools */}
+      <SectionContainer title="Produktivität &amp; Tools" description="Vorlesungsplan, Kalender und Uni-Schnellzugriffe">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Card
+            variant="interactive"
+            padding="md"
+            onClick={() => navigateTo('calendar')}
+            className="flex items-center justify-between group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-[var(--radius-md)] bg-[var(--accent-subtle)] text-[var(--accent)] group-hover:scale-105 transition-transform">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-[var(--text-primary)] block">Wochenkalender</span>
+                <span className="text-[11px] text-[var(--text-tertiary)] block mt-0.5">Vorlesungen &amp; Termine im Stundenplan</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)] group-hover:translate-x-0.5 transition-all" />
+          </Card>
+
+          <Card
+            variant="interactive"
+            padding="md"
+            onClick={() => navigateTo('quicklinks')}
+            className="flex items-center justify-between group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-[var(--radius-md)] bg-[var(--accent-subtle)] text-[var(--accent)] group-hover:scale-105 transition-transform">
+                <ExternalLink className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-[var(--text-primary)] block">Uni-Quicklinks</span>
+                <span className="text-[11px] text-[var(--text-tertiary)] block mt-0.5">Moodle, Lernportal, KI-Tools &amp; Portale</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)] group-hover:translate-x-0.5 transition-all" />
+          </Card>
+        </div>
       </SectionContainer>
 
       {/* Section: Learning Progress & System Status */}

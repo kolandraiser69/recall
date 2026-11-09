@@ -6,3 +6,5 @@ export * from './review';
 export * from './media';
 export * from './sync';
 export * from './settings';
+export * from './calendar';
+export * from './quicklink';

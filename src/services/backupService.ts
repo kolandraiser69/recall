@@ -7,8 +7,30 @@ import { cardSchema } from '../core/validation/card.schema';
 import { reviewLogSchema } from '../core/validation/review.schema';
 import { mediaItemSchema } from '../core/validation/media.schema';
 import { appSettingsSchema } from '../core/validation/settings.schema';
+import {
+  calendarCategorySchema,
+  calendarEventSchema,
+  calendarRecurringRuleSchema,
+  calendarExceptionSchema,
+} from '../core/validation/calendar.schema';
+import { quicklinkSchema } from '../core/validation/quicklink.schema';
 import { DEFAULT_NOTE_TYPES } from '../db/migrations/v1';
-import type { Deck, Note, Card, NoteType, ReviewLog, MediaItem, AppSettings } from '../core/models';
+import { INITIAL_QUICKLINKS } from '../db/migrations/v2';
+import { DEFAULT_CALENDAR_CATEGORIES } from '../core/models/calendar';
+import type {
+  Deck,
+  Note,
+  Card,
+  NoteType,
+  ReviewLog,
+  MediaItem,
+  AppSettings,
+  CalendarCategory,
+  CalendarEvent,
+  CalendarRecurringRule,
+  CalendarException,
+  Quicklink,
+} from '../core/models';
 
 export interface RecallBackupPayload {
   format: 'recall_backup';
@@ -21,6 +43,8 @@ export interface RecallBackupPayload {
     cardCount: number;
     reviewCount: number;
     mediaCount: number;
+    calendarEventCount?: number;
+    quicklinkCount?: number;
   };
   settings: AppSettings;
   decks: Deck[];
@@ -37,6 +61,11 @@ export interface RecallBackupPayload {
     updatedAt: number;
     deletedAt: number | null;
   }>;
+  calendarEvents?: CalendarEvent[];
+  calendarRecurringRules?: CalendarRecurringRule[];
+  calendarExceptions?: CalendarException[];
+  calendarCategories?: CalendarCategory[];
+  quicklinks?: Quicklink[];
 }
 
 export type RecallBackup = RecallBackupPayload;
@@ -52,6 +81,8 @@ export interface RestoreResult {
   reviewsRestored: number;
   mediaRestored: number;
   settingsRestored: boolean;
+  calendarEventsRestored?: number;
+  quicklinksRestored?: number;
 }
 
 export class BackupService {
@@ -104,13 +135,30 @@ export class BackupService {
     const now = Date.now();
     const settings = settingsService.getSettings();
 
-    const [decks, noteTypes, notes, cards, reviews, mediaItems] = await Promise.all([
+    const [
+      decks,
+      noteTypes,
+      notes,
+      cards,
+      reviews,
+      mediaItems,
+      calendarEvents,
+      calendarRecurringRules,
+      calendarExceptions,
+      calendarCategories,
+      quicklinks,
+    ] = await Promise.all([
       this.database.decks.toArray(),
       this.database.noteTypes.toArray(),
       this.database.notes.toArray(),
       this.database.cards.toArray(),
       this.database.reviews.toArray(),
       this.database.media.toArray(),
+      this.database.calendarEvents.toArray(),
+      this.database.calendarRecurringRules.toArray(),
+      this.database.calendarExceptions.toArray(),
+      this.database.calendarCategories.toArray(),
+      this.database.quicklinks.toArray(),
     ]);
 
     // Encode media blobs to base64
@@ -141,6 +189,8 @@ export class BackupService {
         cardCount: cards.filter((c) => c.deletedAt === null).length,
         reviewCount: reviews.filter((r) => r.deletedAt === null).length,
         mediaCount: encodedMedia.filter((m) => m.deletedAt === null).length,
+        calendarEventCount: calendarEvents.filter((e) => e.deletedAt === null).length,
+        quicklinkCount: quicklinks.filter((q) => q.deletedAt === null).length,
       },
       settings,
       decks,
@@ -149,6 +199,11 @@ export class BackupService {
       cards,
       reviews,
       media: encodedMedia,
+      calendarEvents,
+      calendarRecurringRules,
+      calendarExceptions,
+      calendarCategories,
+      quicklinks,
     };
 
     const jsonString = JSON.stringify(payload, null, 2);
@@ -268,6 +323,19 @@ export class BackupService {
     const validCards = payload.cards.map((c) => cardSchema.parse(c));
     const validReviews = payload.reviews.map((r) => reviewLogSchema.parse(r));
 
+    // Optional Phase 6.5 / 7 elements (backwards compatibility for Phase 6 backups)
+    const validCalendarEvents = (payload.calendarEvents || []).map((e) => calendarEventSchema.parse(e));
+    const validCalendarRules = (payload.calendarRecurringRules || []).map((r) =>
+      calendarRecurringRuleSchema.parse(r)
+    );
+    const validCalendarExceptions = (payload.calendarExceptions || []).map((ex) =>
+      calendarExceptionSchema.parse(ex)
+    );
+    const validCalendarCategories = (payload.calendarCategories || []).map((c) =>
+      calendarCategorySchema.parse(c)
+    );
+    const validQuicklinks = (payload.quicklinks || []).map((q) => quicklinkSchema.parse(q));
+
     // Decode media items
     const validMediaItems: MediaItem[] = [];
     if (Array.isArray(payload.media)) {
@@ -302,6 +370,11 @@ export class BackupService {
         this.database.cards,
         this.database.reviews,
         this.database.media,
+        this.database.calendarEvents,
+        this.database.calendarRecurringRules,
+        this.database.calendarExceptions,
+        this.database.calendarCategories,
+        this.database.quicklinks,
       ],
       async () => {
         if (opts.mode === 'replace') {
@@ -313,6 +386,11 @@ export class BackupService {
             this.database.cards.clear(),
             this.database.reviews.clear(),
             this.database.media.clear(),
+            this.database.calendarEvents.clear(),
+            this.database.calendarRecurringRules.clear(),
+            this.database.calendarExceptions.clear(),
+            this.database.calendarCategories.clear(),
+            this.database.quicklinks.clear(),
           ]);
         }
 
@@ -323,6 +401,13 @@ export class BackupService {
         if (validCards.length > 0) await this.database.cards.bulkPut(validCards);
         if (validReviews.length > 0) await this.database.reviews.bulkPut(validReviews);
         if (validMediaItems.length > 0) await this.database.media.bulkPut(validMediaItems);
+        if (validCalendarEvents.length > 0) await this.database.calendarEvents.bulkPut(validCalendarEvents);
+        if (validCalendarRules.length > 0) await this.database.calendarRecurringRules.bulkPut(validCalendarRules);
+        if (validCalendarExceptions.length > 0)
+          await this.database.calendarExceptions.bulkPut(validCalendarExceptions);
+        if (validCalendarCategories.length > 0)
+          await this.database.calendarCategories.bulkPut(validCalendarCategories);
+        if (validQuicklinks.length > 0) await this.database.quicklinks.bulkPut(validQuicklinks);
       }
     );
 
@@ -338,12 +423,14 @@ export class BackupService {
       reviewsRestored: validReviews.length,
       mediaRestored: validMediaItems.length,
       settingsRestored: Boolean(validSettings),
+      calendarEventsRestored: validCalendarEvents.length,
+      quicklinksRestored: validQuicklinks.length,
     };
   }
 
   /**
    * Performs a clean factory reset of the entire local database.
-   * Restores default note types.
+   * Restores default note types, categories, and quicklinks.
    */
   async clearAllData(): Promise<void> {
     await this.database.transaction(
@@ -355,6 +442,11 @@ export class BackupService {
         this.database.cards,
         this.database.reviews,
         this.database.media,
+        this.database.calendarEvents,
+        this.database.calendarRecurringRules,
+        this.database.calendarExceptions,
+        this.database.calendarCategories,
+        this.database.quicklinks,
       ],
       async () => {
         await Promise.all([
@@ -364,10 +456,19 @@ export class BackupService {
           this.database.cards.clear(),
           this.database.reviews.clear(),
           this.database.media.clear(),
+          this.database.calendarEvents.clear(),
+          this.database.calendarRecurringRules.clear(),
+          this.database.calendarExceptions.clear(),
+          this.database.calendarCategories.clear(),
+          this.database.quicklinks.clear(),
         ]);
 
-        // Re-populate standard default note types
-        await this.database.noteTypes.bulkAdd(DEFAULT_NOTE_TYPES);
+        // Re-populate standard default note types, calendar categories, and quicklinks
+        await Promise.all([
+          this.database.noteTypes.bulkAdd(DEFAULT_NOTE_TYPES),
+          this.database.calendarCategories.bulkAdd(DEFAULT_CALENDAR_CATEGORIES),
+          this.database.quicklinks.bulkAdd(INITIAL_QUICKLINKS),
+        ]);
       }
     );
 

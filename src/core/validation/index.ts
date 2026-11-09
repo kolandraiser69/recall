@@ -5,3 +5,5 @@ export * from './noteType.schema';
 export * from './review.schema';
 export * from './media.schema';
 export * from './settings.schema';
+export * from './calendar.schema';
+export * from './quicklink.schema';

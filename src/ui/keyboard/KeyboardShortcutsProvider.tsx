@@ -13,6 +13,8 @@ export const GLOBAL_SHORTCUTS: ShortcutDefinition[] = [
   { keys: ['g', 'd'], description: 'Go to Decks', category: 'Navigation' },
   { keys: ['g', 'c'], description: 'Go to Collection', category: 'Navigation' },
   { keys: ['g', 't'], description: 'Go to Statistics', category: 'Navigation' },
+  { keys: ['g', 'l'], description: 'Go to Kalender', category: 'Navigation' },
+  { keys: ['g', 'q'], description: 'Go to Quicklinks', category: 'Navigation' },
   { keys: ['g', ','], description: 'Go to Settings', category: 'Navigation' },
   { keys: ['?'], description: 'Show Keyboard Shortcuts', category: 'General' },
   { keys: ['Esc'], description: 'Close Dialogs & Overlays', category: 'General' },
@@ -90,6 +92,8 @@ export const KeyboardShortcutsProvider: React.FC<{ children: React.ReactNode }> 
         else if (key.toLowerCase() === 'd') route = 'decks';
         else if (key.toLowerCase() === 'c' || key.toLowerCase() === 'b') route = 'collection';
         else if (key.toLowerCase() === 't') route = 'statistics';
+        else if (key.toLowerCase() === 'l') route = 'calendar';
+        else if (key.toLowerCase() === 'q') route = 'quicklinks';
         else if (key === ',') route = 'settings';
 
         if (route) {

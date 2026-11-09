@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, BookOpen, Layers, Library, BarChart3 } from 'lucide-react';
+import { Home, BookOpen, Layers, Library, Calendar } from 'lucide-react';
 import { useNavigation, type NavRoute } from '../navigation/NavigationContext';
 
 export const BottomTabBar: React.FC = () => {
@@ -9,8 +9,8 @@ export const BottomTabBar: React.FC = () => {
     { route: 'home', label: 'Home', icon: <Home className="w-5 h-5" /> },
     { route: 'study', label: 'Study', icon: <BookOpen className="w-5 h-5" /> },
     { route: 'decks', label: 'Decks', icon: <Layers className="w-5 h-5" /> },
+    { route: 'calendar', label: 'Kalender', icon: <Calendar className="w-5 h-5" /> },
     { route: 'collection', label: 'Cards', icon: <Library className="w-5 h-5" /> },
-    { route: 'statistics', label: 'Stats', icon: <BarChart3 className="w-5 h-5" /> },
   ];
 
   return (

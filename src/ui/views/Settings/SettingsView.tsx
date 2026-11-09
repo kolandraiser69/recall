@@ -32,6 +32,8 @@ import { backupService, type RecallBackup } from '../../../services/backupServic
 import type { AppSettings } from '../../../core/models/settings';
 import { AnkiImportModal } from './components/AnkiImportModal';
 import { AnkiExportModal } from './components/AnkiExportModal';
+import { PwaSettingsSection } from './components/PwaSettingsSection';
+import { SupabaseSyncSection } from './components/SupabaseSyncSection';
 
 export const SettingsView: React.FC = () => {
   const { theme, setTheme } = useTheme();
@@ -516,6 +518,12 @@ export const SettingsView: React.FC = () => {
           </div>
         </Card>
       </SectionContainer>
+ 
+      {/* PWA & Installation */}
+      <PwaSettingsSection />
+
+      {/* Cloud Sync (Supabase) */}
+      <SupabaseSyncSection />
 
       {/* Storage & Local-First Health */}
       <SectionContainer title="Storage &amp; Local Persistence" description="IndexedDB health and device quota">
