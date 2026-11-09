@@ -10,7 +10,7 @@ import { HomeView } from './ui/views/Home/HomeView';
 import { StudyView } from './ui/views/Study/StudyView';
 import { DecksView } from './ui/views/Decks/DecksView';
 import { CollectionView } from './ui/views/Collection/CollectionView';
-import { StatisticsPlaceholderView } from './ui/views/Statistics/StatisticsPlaceholderView';
+import { StatisticsView } from './ui/views/Statistics/StatisticsView';
 import { SettingsView } from './ui/views/Settings/SettingsView';
 
 const RouteRenderer: React.FC = () => {
@@ -24,7 +24,7 @@ const RouteRenderer: React.FC = () => {
     case 'collection':
       return <CollectionView />;
     case 'statistics':
-      return <StatisticsPlaceholderView />;
+      return <StatisticsView />;
     case 'settings':
       return <SettingsView />;
     case 'home':

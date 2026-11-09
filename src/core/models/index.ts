@@ -5,3 +5,4 @@ export * from './deck';
 export * from './review';
 export * from './media';
 export * from './sync';
+export * from './settings';
