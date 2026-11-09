@@ -6,35 +6,42 @@ export interface RenderResult {
   answerHtml: string;
 }
 
+export interface RenderOptions {
+  clozeIndex?: number; // 1-based index (e.g. 1 for c1)
+  resolveMediaUrl?: (filename: string) => string | null;
+}
+
 export class TemplateRenderer {
   /**
    * Renders a given template with field values.
    *
    * @param template The CardTemplate containing qfmt and afmt.
    * @param fieldValues Map of field names to string/HTML values.
-   * @param options Optional parameters (e.g. clozeIndex for cloze notes).
+   * @param options Optional parameters (e.g. clozeIndex for cloze notes, media resolver).
    */
   static render(
     template: CardTemplate,
     fieldValues: Record<string, string>,
-    options?: {
-      clozeIndex?: number; // 1-based index (e.g. 1 for c1)
-    }
+    options?: RenderOptions
   ): RenderResult {
     const clozeIndex = options?.clozeIndex ?? 1;
 
     // 1. Render Question side
-    const questionHtml = this.renderSide(template.qfmt, fieldValues, {
+    const rawQuestionHtml = this.renderSide(template.qfmt, fieldValues, {
       isQuestion: true,
       clozeIndex,
     });
 
+    const questionHtml = this.postProcess(rawQuestionHtml, options?.resolveMediaUrl);
+
     // 2. Render Answer side, providing {{FrontSide}} as the rendered question
-    const answerHtml = this.renderSide(template.afmt, fieldValues, {
+    const rawAnswerHtml = this.renderSide(template.afmt, fieldValues, {
       isQuestion: false,
       clozeIndex,
       frontSide: questionHtml,
     });
+
+    const answerHtml = this.postProcess(rawAnswerHtml, options?.resolveMediaUrl);
 
     return {
       questionHtml,
@@ -46,6 +53,9 @@ export class TemplateRenderer {
    * Evaluates Mustache-like field replacements:
    * - {{Field}}
    * - {{cloze:Field}}
+   * - {{text:Field}}
+   * - {{hint:Field}}
+   * - {{type:Field}}
    * - {{FrontSide}}
    * - Conditional blocks: {{#Field}}...{{/Field}} and {{^Field}}...{{/Field}}
    */
@@ -95,14 +105,84 @@ export class TemplateRenderer {
       return ClozeEngine.renderAnswer(rawText, context.clozeIndex);
     });
 
-    // 5. Replace standard {{FieldName}} tags
+    // 5. Replace {{text:FieldName}} tags (strip HTML tags)
+    result = result.replace(/\{\{text:([a-zA-Z0-9_\-\s]+)\}\}/g, (_match, fieldName) => {
+      const trimmed = fieldName.trim();
+      const rawText = fieldValues[trimmed] ?? '';
+      return rawText.replace(/<[^>]*>/g, '').trim();
+    });
+
+    // 6. Replace {{hint:FieldName}} tags (collapsible disclosure)
+    result = result.replace(/\{\{hint:([a-zA-Z0-9_\-\s]+)\}\}/g, (_match, fieldName) => {
+      const trimmed = fieldName.trim();
+      const rawText = fieldValues[trimmed] ?? '';
+      if (!rawText.trim()) return '';
+      return `<details class="anki-hint"><summary class="anki-hint-summary cursor-pointer text-xs text-[var(--accent)] font-medium">Show Hint</summary><div class="anki-hint-body mt-1 text-xs opacity-80">${rawText}</div></details>`;
+    });
+
+    // 7. Replace {{type:FieldName}} tags
+    result = result.replace(/\{\{type:([a-zA-Z0-9_\-\s]+)\}\}/g, (_match, fieldName) => {
+      const trimmed = fieldName.trim();
+      const rawText = fieldValues[trimmed] ?? '';
+      if (context.isQuestion) {
+        return `<div class="anki-type-prompt">[Type Answer]</div>`;
+      }
+      return `<div class="anki-type-answer">${rawText}</div>`;
+    });
+
+    // 8. Replace standard {{FieldName}} tags
     result = result.replace(/\{\{([a-zA-Z0-9_\-\s]+)\}\}/g, (_match, fieldName) => {
       const trimmed = fieldName.trim();
-      // If the field exists in fieldValues, return it; otherwise empty string without crash
       return fieldValues[trimmed] ?? '';
     });
 
     return result.trim();
+  }
+
+  /**
+   * Post-processes HTML:
+   * - Converts [sound:filename] into <audio> tags
+   * - Disarms and sanitizes unsafe scripts and inline event handlers
+   * - Resolves relative media URLs using the optional resolver
+   */
+  private static postProcess(html: string, resolveMediaUrl?: (filename: string) => string | null): string {
+    if (!html) return '';
+
+    let processed = html;
+
+    // 1. Convert [sound:filename.ext] to audio player
+    processed = processed.replace(/\[sound:([^\]]+)\]/gi, (_match, filename) => {
+      const trimmed = filename.trim();
+      const url = resolveMediaUrl ? (resolveMediaUrl(trimmed) ?? trimmed) : trimmed;
+      return `<audio controls src="${url}" preload="metadata" class="anki-audio my-2 max-w-full"></audio>`;
+    });
+
+    // 2. Resolve <img src="..."> if media resolver provided
+    if (resolveMediaUrl) {
+      processed = processed.replace(/<img\s+([^>]*?)src=["']([^"']+)["']([^>]*)>/gi, (match, prefix, src, suffix) => {
+        // Only resolve relative media filenames (not data: or http://)
+        if (!src.startsWith('data:') && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('blob:')) {
+          const resolved = resolveMediaUrl(src);
+          if (resolved) {
+            return `<img ${prefix}src="${resolved}"${suffix}>`;
+          }
+        }
+        return match;
+      });
+    }
+
+    // 3. Security: Sanitize <script> tags to prevent arbitrary execution in application
+    processed = processed.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, () => {
+      return `<span class="anki-disabled-script text-[11px] text-[var(--text-tertiary)] italic" title="Custom script disabled for security">[Script Disabled]</span>`;
+    });
+
+    // 4. Security: Strip inline event handlers (onerror=, onload=, onclick=, etc.)
+    processed = processed.replace(/\son[a-zA-Z]+\s*=\s*(["'][^"']*["']|[^\s>]+)/gi, '');
+
+    // 5. Security: Disarm javascript: pseudo-protocol in links
+    processed = processed.replace(/href\s*=\s*["']\s*javascript:[^"']*["']/gi, 'href="#"');
+
+    return processed;
   }
 
   /**

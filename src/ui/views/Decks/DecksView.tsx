@@ -14,7 +14,9 @@ import { CreateEditDeckModal } from './components/CreateEditDeckModal';
 import { MoveDeckModal } from './components/MoveDeckModal';
 import { DeleteDeckModal } from './components/DeleteDeckModal';
 import { NoteEditorModal } from '../Editor/NoteEditorModal';
-import { Plus, Layers, ChevronDown, ChevronRight } from 'lucide-react';
+import { AnkiImportModal } from '../Settings/components/AnkiImportModal';
+import { AnkiExportModal } from '../Settings/components/AnkiExportModal';
+import { Plus, Layers, ChevronDown, ChevronRight, Upload, Download } from 'lucide-react';
 
 export const DecksView: React.FC = () => {
   const { navigateTo } = useNavigation();
@@ -22,6 +24,11 @@ export const DecksView: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedDeckIds, setExpandedDeckIds] = useState<Set<string>>(new Set());
+
+  // Anki Import & Export Modals
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [exportDeckId, setExportDeckId] = useState<string | undefined>(undefined);
 
   // Modal States
   const [isCreateEditOpen, setIsCreateEditOpen] = useState(false);
@@ -268,7 +275,26 @@ export const DecksView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => setIsImportOpen(true)}
+            leftIcon={<Upload className="w-4 h-4" />}
+          >
+            Import .apkg
+          </Button>
+          {totalDeckCount > 0 && (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setExportDeckId(undefined);
+                setIsExportOpen(true);
+              }}
+              leftIcon={<Download className="w-4 h-4" />}
+            >
+              Export
+            </Button>
+          )}
           <Button
             variant="secondary"
             onClick={() => handleOpenAddNote()}
@@ -303,16 +329,25 @@ export const DecksView: React.FC = () => {
           </h2>
 
           <p className="text-xs text-[var(--text-secondary)] max-w-sm mx-auto mt-1 mb-6 leading-relaxed">
-            Create your first deck to start adding flashcards and organizing your spaced repetition study material.
+            Create your first deck to start adding flashcards, or import an existing Anki collection (.apkg) with your notes, media, and review history.
           </p>
 
-          <Button
-            variant="primary"
-            onClick={() => handleOpenCreate(null)}
-            leftIcon={<Plus className="w-4 h-4" />}
-          >
-            Create Your First Deck
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => setIsImportOpen(true)}
+              leftIcon={<Upload className="w-4 h-4" />}
+            >
+              Import Anki Deck (.apkg)
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => handleOpenCreate(null)}
+              leftIcon={<Plus className="w-4 h-4" />}
+            >
+              Create Your First Deck
+            </Button>
+          </div>
         </Card>
       ) : (
         /* Deck List View */
@@ -395,6 +430,17 @@ export const DecksView: React.FC = () => {
         isOpen={isNoteEditorOpen}
         onClose={() => setIsNoteEditorOpen(false)}
         defaultDeckId={noteEditorDeckId}
+      />
+
+      <AnkiImportModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+      />
+
+      <AnkiExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        initialDeckId={exportDeckId}
       />
     </div>
   );

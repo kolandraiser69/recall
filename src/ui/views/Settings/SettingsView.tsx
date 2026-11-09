@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sun, Moon, Laptop, HardDrive, Keyboard, Sparkles, Save } from 'lucide-react';
+import { Sun, Moon, Laptop, HardDrive, Keyboard, Sparkles, Save, Upload, Download, Package } from 'lucide-react';
 import { useTheme, type Theme } from '../../theme/ThemeProvider';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { Card } from '../../components/Card';
@@ -11,12 +11,18 @@ import { useKeyboardShortcuts } from '../../keyboard/KeyboardShortcutsProvider';
 import { useToast } from '../../components/Toast';
 import { getStorageStatus, type StorageStatus } from '../../../db/storagePersistence';
 import { settingsService, type GlobalStudySettings } from '../../../services/settingsService';
+import { AnkiImportModal } from './components/AnkiImportModal';
+import { AnkiExportModal } from './components/AnkiExportModal';
 
 export const SettingsView: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const { toggleHelp } = useKeyboardShortcuts();
   const toast = useToast();
   const [storageStatus, setStorageStatus] = useState<StorageStatus | null>(null);
+
+  // Anki Import & Export Modals
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   // Global Study Settings State
   const [studySettings, setStudySettings] = useState<GlobalStudySettings>(() =>
@@ -269,6 +275,48 @@ export const SettingsView: React.FC = () => {
         </Card>
       </SectionContainer>
 
+      {/* Anki Import & Export Section */}
+      <SectionContainer
+        title="Anki Import &amp; Export"
+        description="Migrate decks, flashcards, media assets, and review history seamlessly between Anki and Recall"
+      >
+        <Card variant="standard" padding="md" className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-[var(--radius-md)] bg-[var(--accent-subtle)] text-[var(--accent)] mt-0.5">
+                <Package className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-sm font-semibold text-[var(--text-primary)]">
+                  Anki Package Archives (.apkg)
+                </span>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  Import existing packages with media and FSRS mapping, or export your collections to universal Schema-11 .apkg files.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<Upload className="w-3.5 h-3.5" />}
+                onClick={() => setIsImportModalOpen(true)}
+              >
+                Import .apkg
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<Download className="w-3.5 h-3.5" />}
+                onClick={() => setIsExportModalOpen(true)}
+              >
+                Export .apkg
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </SectionContainer>
+
       {/* Keyboard Shortcuts */}
       <SectionContainer title="Keyboard Navigation" description="Desktop accelerators and chords">
         <Card variant="standard" padding="md">
@@ -303,6 +351,16 @@ export const SettingsView: React.FC = () => {
           </p>
         </Card>
       </SectionContainer>
+
+      {/* Modals */}
+      <AnkiImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+      />
+      <AnkiExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+      />
     </div>
   );
 };

@@ -118,4 +118,63 @@ describe('TemplateRenderer', () => {
     expect(TemplateRenderer.isQuestionEmpty(template, { Front: '<span></span>', Back: 'Data' })).toBe(true);
     expect(TemplateRenderer.isQuestionEmpty(template, { Front: 'Valid Question', Back: 'Data' })).toBe(false);
   });
+
+  it('should support Anki {{text:Field}} tag to strip HTML tags', () => {
+    const template: CardTemplate = {
+      name: 'Text Tag',
+      qfmt: '{{text:Formatted}}',
+      afmt: '{{Formatted}}',
+    };
+
+    const res = TemplateRenderer.render(template, {
+      Formatted: '<b>Bold</b> and <i>Italic</i>',
+    });
+
+    expect(res.questionHtml).toBe('Bold and Italic');
+    expect(res.answerHtml).toBe('<b>Bold</b> and <i>Italic</i>');
+  });
+
+  it('should support Anki {{hint:Field}} collapsible disclosure', () => {
+    const template: CardTemplate = {
+      name: 'Hint Tag',
+      qfmt: '{{Question}}<br>{{hint:Clue}}',
+      afmt: '{{Answer}}',
+    };
+
+    const res = TemplateRenderer.render(template, {
+      Question: 'Capital of Japan?',
+      Clue: 'Starts with T',
+      Answer: 'Tokyo',
+    });
+
+    expect(res.questionHtml).toContain('<details class="anki-hint">');
+    expect(res.questionHtml).toContain('Show Hint');
+    expect(res.questionHtml).toContain('Starts with T');
+  });
+
+  it('should convert [sound:filename] into audio player element', () => {
+    const template: CardTemplate = {
+      name: 'Audio Tag',
+      qfmt: 'Listen: [sound:pronounce.mp3]',
+      afmt: '{{Back}}',
+    };
+
+    const res = TemplateRenderer.render(template, { Back: 'Word' });
+    expect(res.questionHtml).toContain('<audio controls src="pronounce.mp3"');
+  });
+
+  it('should sanitize script tags and inline event handlers for security', () => {
+    const template: CardTemplate = {
+      name: 'Malicious Card',
+      qfmt: '<script>alert("hacked")</script><img src="x" onerror="evil()" />Hello',
+      afmt: '<a href="javascript:steal()">Click</a>',
+    };
+
+    const res = TemplateRenderer.render(template, {});
+    expect(res.questionHtml).not.toContain('<script>');
+    expect(res.questionHtml).toContain('[Script Disabled]');
+    expect(res.questionHtml).not.toContain('onerror=');
+    expect(res.answerHtml).not.toContain('javascript:steal()');
+    expect(res.answerHtml).toContain('href="#"');
+  });
 });
